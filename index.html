@@ -421,17 +421,25 @@
           User consent
         </h3>
         <p>
-          <cite>Geolocation</cite> uses the [=permission=]
-          <a>"geolocation-approximate"</a> and <a>"geolocation"</a>, which
-          require [=express permission=] from an end-user before any location
-          data is shared with a web application. This requirement is
-          normatively enforced by the [=request permission to use=] algorithm
-          on which the {{Geolocation/getCurrentPosition()}} and
+          <cite>Geolocation</cite> is a [=powerful feature=] identified by the
+          name <dfn class="permission">"geolocation"</dfn>. This specification
+          defines the {{GeolocationPermissionDescriptor}} dictionary, which is
+          used to specify the requested level of accuracy via its
+          {{GeolocationPermissionDescriptor/accuracyMode}} member.
+        </p>
+        <pre class="idl">
+          dictionary GeolocationPermissionDescriptor : PermissionDescriptor {
+            AccuracyMode accuracyMode = "precise";
+          };
+        </pre>
+        <p>
+          The [=permission=] requirement is normatively enforced by the
+          [=request permission to use=] algorithm on which the
+          {{Geolocation/getCurrentPosition()}} and
           {{Geolocation/watchPosition()}} methods rely. [=User agents=] with
           support for [=approximate position=] MUST provide users with the
           option to grant access to either a [=precise position=] or an
-          [=approximate position=]. This choice gives users more control over
-          their privacy, allowing them to share an [=approximate position=].
+          [=approximate position=].
         </p>
         <p>
           An end-user will generally give [=express permission=] through a user
@@ -447,10 +455,21 @@
           upon subsequent use.
         </p>
         <p>
-          Although the granularity of the permission [=permission/lifetime=]
-          varies across user-agents, this specification urges user agents to
-          limit the lifetime to a single browsing session by default (see
-          [=checking permission=] for normative requirements).
+          When [=query a permission|querying a permission=] via the
+          [[[Permissions]]] API, a user agent MAY mask the returned state of
+          the <a>"geolocation"</a> permission in order to hide the user choice
+          from websites.
+        </p>
+        <p>
+          When <dfn>check permission</dfn> to use the API, a user agent MAY
+          suggest time-based [=permission=] [=permission/lifetimes=], such as
+          "24 hours", "1 week", or choose to remember the permission
+          [=permission/grant=] indefinitely. However, it is RECOMMENDED that a
+          user agent prioritize restricting the [=permission=]
+          [=permission/lifetime=] to a single session: This can be, for
+          example, until the [=environment settings object/realm=] is
+          destroyed, the end-user [=navigates=] away from the [=origin=], or
+          the relevant browser tab is closed.
         </p>
       </section>
       <section id="privacy_for_recipients" class="informative">
@@ -523,103 +542,6 @@
           designing these measures, implementers are advised to enable user
           awareness of location sharing, and to provide access to user
           interfaces that enable revocation of permissions.
-        </p>
-      </section>
-      <section id="permission">
-        <h3>
-          Geolocation permissions
-        </h3>
-        <p>
-          <cite>Geolocation</cite> defines two [=permissions=] identified by
-          the names <dfn class="permission">"geolocation"</dfn> (for precise
-          location) and <dfn class="permission">"geolocation-approximate"</dfn>
-          (for approximate location). Both <a>"geolocation"</a> and
-          <a>"geolocation-approximate"</a> are [=default powerful features=].
-        </p>
-        <p>
-          There is a strict dependency between the [=permission states=] of
-          <a>"geolocation"</a> and <a>"geolocation-approximate"</a>, resulting
-          in the following combinations of [=permission states=]:
-        </p>
-        <table class="data">
-          <thead>
-            <tr>
-              <th>
-                <a>"geolocation"</a>
-              </th>
-              <th>
-                <a>"geolocation-approximate"</a>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>
-                [=permission/"granted"=]
-              </td>
-              <td>
-                [=permission/"granted"=]
-              </td>
-            </tr>
-            <tr>
-              <td>
-                [=permission/"prompt"=]
-              </td>
-              <td>
-                [=permission/"prompt"=]
-              </td>
-            </tr>
-            <tr>
-              <td>
-                [=permission/"denied"=]
-              </td>
-              <td>
-                [=permission/"denied"=]
-              </td>
-            </tr>
-            <tr>
-              <td>
-                [=permission/"prompt"=]
-              </td>
-              <td>
-                [=permission/"granted"=]
-              </td>
-            </tr>
-            <tr>
-              <td>
-                [=permission/"denied"=]
-              </td>
-              <td>
-                [=permission/"granted"=]
-              </td>
-            </tr>
-            <tr>
-              <td>
-                [=permission/"denied"=]
-              </td>
-              <td>
-                [=permission/"prompt"=]
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <aside class="issue" data-number="231"></aside>
-        <p title="Querying 'geolocation-approximate'">
-          When [=query a permission|querying a permission=] via the
-          [[[Permissions]]] API, a user agent MAY mask the returned states of
-          <a>"geolocation"</a> and <a>"geolocation-approximate"</a> in order to
-          hide the user choice from websites.
-        </p>
-        <p>
-          When <dfn>checking permission</dfn> to use the API, a user agent MAY
-          suggest time-based [=permission=] [=permission/lifetimes=], such as
-          "24 hours", "1 week", or choose to remember the permission
-          [=permission/grant=] indefinitely. However, it is RECOMMENDED that a
-          user agent prioritize restricting the [=permission=]
-          [=permission/lifetime=] to a single session: This can be, for
-          example, until the [=environment settings object/realm=] is
-          destroyed, the end-user [=navigates=] away from the [=origin=], or
-          the relevant browser tab is closed.
         </p>
       </section>
       <section>
@@ -860,28 +782,29 @@
               </li>
             </ol>
           </li>
-          <li>Let |descriptor| be a new {{PermissionDescriptor}} whose
-          {{PermissionDescriptor/name}} is <a>"geolocation-approximate"</a> if
-          |options|.{{PositionOptions/accuracyMode}} is
-          {{AccuracyMode/"approximate"}}, otherwise <a>"geolocation"</a>.
+          <li>Let |descriptor| be a new {{GeolocationPermissionDescriptor}}
+          whose {{PermissionDescriptor/name}} is <a>"geolocation"</a> and
+          {{GeolocationPermissionDescriptor/accuracyMode}} is
+          |options|.{{PositionOptions/accuracyMode}}.
           </li>
           <li>[=In parallel=]:
             <ol>
               <li>Let |resolvedPermissionState| be the result of running
               [=request permission to use=] |descriptor|.
               </li>
-              <li>If |descriptor|.{{PermissionDescriptor/name}} is
-              <a>"geolocation"</a> and |resolvedPermissionState| is not
+              <li>If
+              |descriptor|.{{GeolocationPermissionDescriptor/accuracyMode}} is
+              {{AccuracyMode/"precise"}} and |resolvedPermissionState| is not
               [=permission/"granted"=]:
                 <ol>
                   <li>Let |approximateDescriptor| be a new
-                  {{PermissionDescriptor}} whose {{PermissionDescriptor/name}}
-                  is <a>"geolocation-approximate"</a>.
+                  {{GeolocationPermissionDescriptor}} whose
+                  {{PermissionDescriptor/name}} is <a>"geolocation"</a> and
+                  {{GeolocationPermissionDescriptor/accuracyMode}} is
+                  {{AccuracyMode/"approximate"}}.
                   </li>
-                  <li>If the [=permission state=] of |approximateDescriptor| is
-                  [=permission/"granted"=], set |resolvedPermissionState| to
-                  [=permission/"granted"=]. Otherwise, set
-                  |resolvedPermissionState| to [=permission/"denied"=].
+                  <li>Set |resolvedPermissionState| to the [=permission state=]
+                  of |approximateDescriptor|.
                   </li>
                 </ol>
               </li>
@@ -899,8 +822,15 @@
                   </li>
                 </ol>
               </li>
+              <li>Let |effectiveAccuracy:AccuracyMode| be
+              {{AccuracyMode/"precise"}} if
+              |options|.{{PositionOptions/accuracyMode}} is
+              {{AccuracyMode/"precise"}} and the [=permission state=] of
+              |descriptor| is [=permission/"granted"=]. Otherwise, set
+              |effectiveAccuracy| to {{AccuracyMode/"approximate"}}.
+              </li>
               <li>Wait to [=acquire a position=] passing |successCallback|,
-              |errorCallback|, |options|, and |watchId|.
+              |errorCallback|, |options|, |effectiveAccuracy|, and |watchId|.
               </li>
               <li>If |watchId| was not passed, terminate this algorithm.
               </li>
@@ -933,7 +863,8 @@
                     </aside>
                   </li>
                   <li>Wait to [=acquire a position=] passing |successCallback|,
-                  |errorCallback|, |options|, and |watchId|.
+                  |errorCallback|, |options|, |effectiveAccuracy|, and
+                  |watchId|.
                   </li>
                 </ol>
               </li>
@@ -950,8 +881,9 @@
           "acquiring a position|acquire a position">acquire a position</dfn>,
           passing {{PositionCallback}} |successCallback:PositionCallback|, a
           {{PositionErrorCallback?}} |errorCallback:PositionErrorCallback?|,
-          {{PositionOptions}} |options:PositionOptions|, and an optional
-          |watchId:unsigned long|.
+          {{PositionOptions}} |options:PositionOptions|, {{AccuracyMode}}
+          |effectiveAccuracy:AccuracyMode|, and an optional |watchId:unsigned
+          long|.
         </p>
         <ol class="algorithm">
           <li>If |watchId| was passed and [=this=]'s
@@ -971,234 +903,174 @@
           |timeoutTime|, during which it tries to acquire the device's position
           by running the following steps:
             <ol>
-              <li>Let |effectiveAccuracy:AccuracyMode?| be `null`.
-              </li>
-              <li>Let |preciseDescriptor| be a new {{PermissionDescriptor}}
-              with its {{PermissionDescriptor/name}} set to
-              <a>"geolocation"</a>.
-              </li>
-              <li>Let |approximateDescriptor| be a new {{PermissionDescriptor}}
-              with its {{PermissionDescriptor/name}} set to
-              <a>"geolocation-approximate"</a>.
-              </li>
-              <li>If |options|.{{PositionOptions/accuracyMode}} is
-              {{AccuracyMode/"approximate"}}:
+              <li>Check if an emulated position should be used by running the
+              following steps:
                 <ol>
-                  <li>If the [=permission state=] of |approximateDescriptor| is
-                  [=permission/"granted"=], set |effectiveAccuracy| to
-                  {{AccuracyMode/"approximate"}}.
+                  <li>Let |emulatedPositionData| be [=get emulated position
+                  data=] passing [=this=].
                   </li>
-                </ol>
-              </li>
-              <li>Otherwise (|options|.{{PositionOptions/accuracyMode}} is
-              {{AccuracyMode/"precise"}}):
-                <ol>
-                  <li>If the [=permission state=] of |preciseDescriptor| is
-                  [=permission/"granted"=]:
+                  <li>If |emulatedPositionData| is not null:
                     <ol>
-                      <li>Set |effectiveAccuracy| to
-                      {{AccuracyMode/"precise"}}.
-                      </li>
-                    </ol>
-                  </li>
-                  <li>Otherwise, if the [=permission state=] of
-                  |approximateDescriptor| is [=permission/"granted"=]:
-                    <ol>
-                      <li>Set |effectiveAccuracy| to
-                      {{AccuracyMode/"approximate"}}.
-                      </li>
-                    </ol>
-                  </li>
-                </ol>
-              </li>
-              <li>If |effectiveAccuracy| is `null`:
-                <ol>
-                  <li>Stop |timeout|.
-                  </li>
-                  <li>Do the <a href="#permission-denied">user or system denied
-                  permission</a> failure case step.
-                  </li>
-                  <li>Terminate this algorithm.
-                  </li>
-                </ol>
-              </li>
-              <li>Otherwise, run the following steps to determine |position|:
-                <ol>
-                  <li>Check if an emulated position should be used by running
-                  the following steps:
-                    <ol>
-                      <li>Let |emulatedPositionData| be [=get emulated position
-                      data=] passing [=this=].
-                      </li>
-                      <li>If |emulatedPositionData| is not null:
+                      <li>If |emulatedPositionData| is a
+                      {{GeolocationPositionError}}:
                         <ol>
-                          <li>If |emulatedPositionData| is a
-                          {{GeolocationPositionError}}:
-                            <ol>
-                              <li>[=Call back with error=] passing
-                              |errorCallback| and
-                              |emulatedPositionData|.{{GeolocationPositionError/code}}.
-                              </li>
-                              <li>Terminate this algorithm.
-                              </li>
-                            </ol>
-                          </li>
-                          <li>Let |position| be [=a new `GeolocationPosition`=]
-                          passing |emulatedPositionData|, |acquisitionTime| and
-                          |options|.{{PositionOptions/enableHighAccuracy}}.
-                          </li>
-                          <li>[=Queue a task=] on the [=geolocation task
-                          source=] with a step that [=invokes=]
-                          |successCallback| with « |position| » and "`report`".
+                          <li>[=Call back with error=] passing |errorCallback|
+                          and
+                          |emulatedPositionData|.{{GeolocationPositionError/code}}.
                           </li>
                           <li>Terminate this algorithm.
                           </li>
                         </ol>
                       </li>
-                    </ol>
-                  </li>
-                  <li>Let |position| be null.
-                  </li>
-                  <li>If |cachedPosition| is not null, and
-                  |options|.{{PositionOptions/maximumAge}} is greater than 0:
-                    <ol>
-                      <li>Let |cacheTime:long| be |acquisitionTime| minus the
-                      value of the |options|.{{PositionOptions/maximumAge}}
-                      member.
-                      </li>
-                      <li>If |cachedPosition|'s
-                      {{GeolocationPosition/timestamp}}'s value is greater than
-                      |cacheTime|, and
-                      |cachedPosition|.{{GeolocationPosition/[[isHighAccuracy]]}}
-                      equals |options|.{{PositionOptions/enableHighAccuracy}}:
-                        <ol>
-                          <li>[=Queue a task=] on the [=geolocation task
-                          source=] with a step that [=invokes=]
-                          |successCallback| with « |cachedPosition| » and
-                          "`report`".
-                          </li>
-                          <li>Terminate this algorithm.
-                          </li>
-                        </ol>
-                      </li>
-                    </ol>
-                  </li>
-                  <li>Otherwise, try to acquire position data from the
-                  underlying system, with the following considerations:
-                    <ol>
-                      <li>If |effectiveAccuracy| is
-                      {{AccuracyMode/"approximate"}}, acquire an [=approximate
-                      position=] with a level of accuracy that is sufficient to
-                      protect user privacy (e.g., city-level accuracy). The
-                      {{PositionOptions/enableHighAccuracy}} member is ignored.
-                      </li>
-                      <li>If |effectiveAccuracy| is {{AccuracyMode/"precise"}},
-                      acquire a [=precise position=], optionally taking into
-                      consideration the value of
+                      <li>Let |position| be [=a new `GeolocationPosition`=]
+                      passing |emulatedPositionData|, |acquisitionTime| and
                       |options|.{{PositionOptions/enableHighAccuracy}}.
                       </li>
+                      <li>[=Queue a task=] on the [=geolocation task source=]
+                      with a step that [=invokes=] |successCallback| with «
+                      |position| » and "`report`".
+                      </li>
+                      <li>Terminate this algorithm.
+                      </li>
                     </ol>
                   </li>
                 </ol>
               </li>
-              <li>If the |timeout| elapses during acquisition, or acquiring the
-              device's position results in failure:
+              <li>Let |position| be null.
+              </li>
+              <li>If |cachedPosition| is not null, and
+              |options|.{{PositionOptions/maximumAge}} is greater than 0:
                 <ol>
-                  <li>Stop the |timeout|.
+                  <li>Let |cacheTime:long| be |acquisitionTime| minus the value
+                  of the |options|.{{PositionOptions/maximumAge}} member.
                   </li>
-                  <li>[=Deal with failure=].
-                  </li>
-                  <li>Terminate this algorithm.
+                  <li>If |cachedPosition|'s {{GeolocationPosition/timestamp}}'s
+                  value is greater than |cacheTime|, and
+                  |cachedPosition|.{{GeolocationPosition/[[isHighAccuracy]]}}
+                  equals |options|.{{PositionOptions/enableHighAccuracy}}:
+                    <ol>
+                      <li>[=Queue a task=] on the [=geolocation task source=]
+                      with a step that [=invokes=] |successCallback| with «
+                      |cachedPosition| » and "`report`".
+                      </li>
+                      <li>Terminate this algorithm.
+                      </li>
+                    </ol>
                   </li>
                 </ol>
               </li>
-              <li data-cite="infra">If acquiring the position data from the
-              system succeeds:
+              <li>Otherwise, try to acquire position data from the underlying
+              system, with the following considerations:
                 <ol>
-                  <li>Let |positionData| be a [=map=] with the following
-                  name/value pairs based on the acquired position data:
-                    <dl data-sort="">
-                      <dt>
-                        "latitude"
-                      </dt>
-                      <dd>
-                        A {{double}} that represents the latitude coordinates
-                        on the Earth's surface in degrees, using the [[WGS84]]
-                        coordinate system. Latitude measures how far north or
-                        south a point is from the Equator.
-                      </dd>
-                      <dt>
-                        "longitude"
-                      </dt>
-                      <dd>
-                        A {{double}} that represents the longitude coordinates
-                        on the Earth's surface in degrees, using the [[WGS84]]
-                        coordinate system. Longitude measures how far east or
-                        west a point is from the Prime Meridian.
-                      </dd>
-                      <dt>
-                        "altitude"
-                      </dt>
-                      <dd>
-                        A {{double?}} that represents the altitude in meters
-                        above the [[WGS84]] ellipsoid, or `null` if not
-                        available. Altitude measures the height above sea
-                        level.
-                      </dd>
-                      <dt>
-                        "accuracy"
-                      </dt>
-                      <dd>
-                        A non-negative {{double}} that represents the accuracy
-                        value indicating the 95% confidence level in meters.
-                        Accuracy measures how close the measured coordinates
-                        are to the true position.
-                      </dd>
-                      <dt>
-                        "altitudeAccuracy"
-                      </dt>
-                      <dd>
-                        A non-negative {{double?}} that represents the altitude
-                        accuracy, or `null` if not available, indicating the
-                        95% confidence level in meters. Altitude accuracy
-                        measures how close the measured altitude is to the true
-                        altitude.
-                      </dd>
-                      <dt>
-                        "speed"
-                      </dt>
-                      <dd>
-                        A non-negative {{double?}} that represents the speed in
-                        meters per second, or `null` if not available. Speed
-                        measures how fast the device is moving.
-                      </dd>
-                      <dt>
-                        "heading"
-                      </dt>
-                      <dd>
-                        A {{double?}} that represents the heading in degrees,
-                        or `null` if not available or the device is stationary.
-                        Heading measures the direction in which the device is
-                        moving relative to true north.
-                      </dd>
-                    </dl>
+                  <li>If |effectiveAccuracy| is {{AccuracyMode/"approximate"}},
+                  acquire an [=approximate position=] with a level of accuracy
+                  that is sufficient to protect user privacy (e.g., city-level
+                  accuracy). The {{PositionOptions/enableHighAccuracy}} member
+                  is ignored.
                   </li>
-                  <li>Set |position| to [=a new `GeolocationPosition`=] passing
-                  |positionData|, |acquisitionTime|, and
+                  <li>If |effectiveAccuracy| is {{AccuracyMode/"precise"}},
+                  acquire a [=precise position=], optionally taking into
+                  consideration the value of
                   |options|.{{PositionOptions/enableHighAccuracy}}.
                   </li>
-                  <li>Set [=this=]'s {{Geolocation/[[cachedPosition]]}} to
-                  |position|.
-                  </li>
                 </ol>
               </li>
+            </ol>
+          </li>
+          <li>If the |timeout| elapses during acquisition, or acquiring the
+          device's position results in failure:
+            <ol>
               <li>Stop the |timeout|.
               </li>
-              <li>[=Queue a task=] on the [=geolocation task source=] with a
-              step that [=invokes=] |successCallback| with « |position| » and
-              "`report`".
+              <li>[=Deal with failure=].
+              </li>
+              <li>Terminate this algorithm.
               </li>
             </ol>
+          </li>
+          <li data-cite="infra">If acquiring the position data from the system
+          succeeds:
+            <ol>
+              <li>Let |positionData| be a [=map=] with the following name/value
+              pairs based on the acquired position data:
+                <dl data-sort="">
+                  <dt>
+                    "latitude"
+                  </dt>
+                  <dd>
+                    A {{double}} that represents the latitude coordinates on
+                    the Earth's surface in degrees, using the [[WGS84]]
+                    coordinate system. Latitude measures how far north or south
+                    a point is from the Equator.
+                  </dd>
+                  <dt>
+                    "longitude"
+                  </dt>
+                  <dd>
+                    A {{double}} that represents the longitude coordinates on
+                    the Earth's surface in degrees, using the [[WGS84]]
+                    coordinate system. Longitude measures how far east or west
+                    a point is from the Prime Meridian.
+                  </dd>
+                  <dt>
+                    "altitude"
+                  </dt>
+                  <dd>
+                    A {{double?}} that represents the altitude in meters above
+                    the [[WGS84]] ellipsoid, or `null` if not available.
+                    Altitude measures the height above sea level.
+                  </dd>
+                  <dt>
+                    "accuracy"
+                  </dt>
+                  <dd>
+                    A non-negative {{double}} that represents the accuracy
+                    value indicating the 95% confidence level in meters.
+                    Accuracy measures how close the measured coordinates are to
+                    the true position.
+                  </dd>
+                  <dt>
+                    "altitudeAccuracy"
+                  </dt>
+                  <dd>
+                    A non-negative {{double?}} that represents the altitude
+                    accuracy, or `null` if not available, indicating the 95%
+                    confidence level in meters. Altitude accuracy measures how
+                    close the measured altitude is to the true altitude.
+                  </dd>
+                  <dt>
+                    "speed"
+                  </dt>
+                  <dd>
+                    A non-negative {{double?}} that represents the speed in
+                    meters per second, or `null` if not available. Speed
+                    measures how fast the device is moving.
+                  </dd>
+                  <dt>
+                    "heading"
+                  </dt>
+                  <dd>
+                    A {{double?}} that represents the heading in degrees, or
+                    `null` if not available or the device is stationary.
+                    Heading measures the direction in which the device is
+                    moving relative to true north.
+                  </dd>
+                </dl>
+              </li>
+              <li>Set |position| to [=a new `GeolocationPosition`=] passing
+              |positionData|, |acquisitionTime|, and
+              |options|.{{PositionOptions/enableHighAccuracy}}.
+              </li>
+              <li>Set [=this=]'s {{Geolocation/[[cachedPosition]]}} to
+              |position|.
+              </li>
+            </ol>
+          </li>
+          <li>Stop the |timeout|.
+          </li>
+          <li>[=Queue a task=] on the [=geolocation task source=] with a step
+          that [=invokes=] |successCallback| with « |position| » and
+          "`report`".
           </li>
         </ol>
         <dl class="switch">
@@ -1336,8 +1208,8 @@
         </p>
         <p class="note" title="When is the timeout calculated?">
           The time spent waiting for the document to become visible and for
-          [=request permission to use|obtaining permission to use the API=] is
-          not included in the period covered by the {{PositionOptions/timeout}}
+          [=check permission|obtaining permission to use the API=] is not
+          included in the period covered by the {{PositionOptions/timeout}}
           member. The {{PositionOptions/timeout}} member only applies when
           [=acquiring a position=] begins.
         </p>
